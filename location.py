@@ -2,7 +2,7 @@ from __future__ import annotations
 from component import Component, ComponentType
 from sensor import Sensor
 
-from graphviz import Graph
+from graphviz import Digraph
 
 from warnings import warn
 from enum import Enum
@@ -90,7 +90,7 @@ class Location:
         else:
             return ''
     
-    def _add_location_clusters(self, dot: Graph):
+    def _add_location_clusters(self, dot: Digraph):
         if self.locations:
             with dot.subgraph(name=f'cluster_{self.name}_locations') as sub: #type: ignore
                 sub.attr(label=self._get_label())
@@ -98,14 +98,13 @@ class Location:
                     location._add_cluster(sub) #type: ignore
                     
     
-    def _add_component_cluster(self, dot: Graph):
+    def _add_component_cluster(self, dot: Digraph):
         with dot.subgraph(name=f'cluster_{self.name}_components') as sub: #type: ignore
             sub.attr(style='dotted', label='Components')
-            for component in self.components:
+            for n, component in enumerate(self.components):
                 sub.node(component.name, shape='box')
-
     
-    def _add_cluster(self, dot: Graph):
+    def _add_cluster(self, dot: Digraph):
         if self.components or self.locations:
             with dot.subgraph(name=f'cluster_{self.name}') as sub: #type: ignore
                 sub.attr(label=self.name, shape=self._get_shape())
@@ -115,7 +114,7 @@ class Location:
         dot.node(self.name, shape='box')
 
     def to_graph(self):
-        dot = Graph()
+        dot = Digraph()
         dot.engine = 'dot'
         dot.attr('node', shape='box')
         self._add_cluster(dot)
