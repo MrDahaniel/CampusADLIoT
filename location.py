@@ -2,7 +2,7 @@ from __future__ import annotations
 from component import Component, ComponentType
 from sensor import Sensor
 
-from graphviz import Digraph
+from graphviz import Graph
 
 from warnings import warn
 from enum import Enum
@@ -74,68 +74,52 @@ class Location:
         for l in self.locations:
             l.level = self.level + 1
             l.__update_hierarchy()
-
-    def to_digraph(self):
-        dot = Digraph()
-        self._add_location_clusters(dot, self)
-
-        return dot
     
     def export(self, filename: str = 'diagram', format: str = 'png'):
-        self.to_digraph().render(filename = filename, format = format)
+        self.to_graph().render(filename = filename, format = format)
 
-    def _add_location_clusters(self, parent_cluster, location):
-        if location.locations or location.components:
-            with parent_cluster.subgraph(name=f'cluster_{location.name}') as loc_cluster:
-                loc_cluster.attr(label=location.name)
-
-                # Recursively add clusters for child locations
-                for child_loc in location.locations:
-                    self._add_location_clusters(loc_cluster, child_loc)
-
-                # Add component cluster if there are components
-                if location.components:
-                    with loc_cluster.subgraph(name=f'cluster_{location.name}_components') as comp_cluster:
-                        comp_cluster.attr(style='dotted')
-                        comp_cluster.attr(label='Components')
-                        
-                        # Calculate the number of rows needed for the components
-                        num_rows = max(1, len(location.locations))
-                        num_cols = 2
-                        
-                        # Add squares for each component, with invisible edges to order them in a column
-                        for i, component in enumerate(location.components):
-                            row = i // num_cols
-                            col = i % num_cols
-                            
-                            comp_cluster.node(component.name, shape='box')
-                            
-                            if row > 0:
-                                prev_comp = location.components[i - num_cols]
-                                comp_cluster.edge(prev_comp.name + ':s', component.name + ':n', style='invis')
-                            
-                        # Add invisible edges to order components and locations in two columns
-                        for i, child_loc in enumerate(location.locations):
-                            row = i // num_cols
-                            col = i % num_cols
-                            
-                            if col == 0:
-                                prev_comp = location.components[-1] if location.components else None
-                                prev_node = prev_comp.name + ':s' if prev_comp else location.name + ':n'
-                                loc_cluster.edge(prev_node, child_loc.name + ':n', style='invis')
-                            
-                            else:
-                                prev_loc = location.locations[i - 1]
-                                loc_cluster.edge(prev_loc.name + ':s', child_loc.name + ':n', style='invis')
-                            
-
-        # If location has no child locations or components, represent as square
+    def _get_shape(self):
+        if not self.locations and not self.components:
+            return 'square'
         else:
-            parent_cluster.node(location.name, shape='box')
+            return 'none'
+    
+    def _get_label(self):
+        if self.locations or self.components:
+            return 'Child Locations'
+        else:
+            return ''
+    
+    def _add_location_clusters(self, dot: Graph):
+        if self.locations:
+            with dot.subgraph(name=f'cluster_{self.name}_locations') as sub: #type: ignore
+                sub.attr(label=self._get_label())
+                for location in self.locations:
+                    location._add_cluster(sub) #type: ignore
+                    
+    
+    def _add_component_cluster(self, dot: Graph):
+        with dot.subgraph(name=f'cluster_{self.name}_components') as sub: #type: ignore
+            sub.attr(style='dotted', label='Components')
+            for component in self.components:
+                sub.node(component.name, shape='box')
 
+    
+    def _add_cluster(self, dot: Graph):
+        if self.components or self.locations:
+            with dot.subgraph(name=f'cluster_{self.name}') as sub: #type: ignore
+                sub.attr(label=self.name, shape=self._get_shape())
+                self._add_location_clusters(sub) #type: ignore
+                self._add_component_cluster(sub) #type: ignore
+                return
+        dot.node(self.name, shape='box')
 
-
-
+    def to_graph(self):
+        dot = Graph()
+        dot.engine = 'dot'
+        dot.attr('node', shape='box')
+        self._add_cluster(dot)
+        return dot
 
 
 class LocationState(Enum):

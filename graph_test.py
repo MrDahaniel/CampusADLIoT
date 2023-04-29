@@ -12,6 +12,7 @@ oficina: Location = Location('Oficina')
 
 centic: Location = Location('CENTIC')
 camilo: Location = Location('Camilo Torres')
+mecanica: Location = Location('Mecanica')
 
 pm: Component = Component('Particle Component')
 pm10: Sensor = Sensor('PM10 Sensor')
@@ -24,6 +25,7 @@ noise: Component = Component('Noise Component')
 noise_sens: Sensor = Sensor('dB Sensor')
 
 campus.add_location(lp)
+campus.add_location(mecanica)
 campus.add_location(centic)
 campus.add_location(camilo)
 
@@ -39,8 +41,9 @@ noise.add_sensor(noise_sens)
 
 lp.add_component(pm, ComponentType.MANDATORY)
 
-centic.add_component(temp, ComponentType.MANDATORY)
-centic.add_component(noise, ComponentType.OPTIONAL)
-centic.add_component(noise, ComponentType.OPTIONAL)
+campus.add_component(temp, ComponentType.MANDATORY)
+campus.add_component(noise, ComponentType.OPTIONAL)
+
+mecanica.add_component(temp, ComponentType.MANDATORY)
 
 campus.export('ignore/diagram')
