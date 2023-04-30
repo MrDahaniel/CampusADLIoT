@@ -75,49 +75,68 @@ class Location:
             l.level = self.level + 1
             l.__update_hierarchy()
     
+
     def export(self, filename: str = 'diagram', format: str = 'png'):
         self.to_graph().render(filename = filename, format = format)
 
-    def _get_shape(self):
-        if not self.locations and not self.components:
-            return 'square'
-        else:
-            return 'none'
-    
-    def _get_label(self):
-        if self.locations or self.components:
-            return 'Child Locations'
-        else:
-            return ''
-    
+
     def _add_location_clusters(self, dot: Digraph):
-        if self.locations:
-            with dot.subgraph(name=f'cluster_{self.name}_locations') as sub: #type: ignore
-                sub.attr(label=self._get_label())
-                for location in self.locations:
-                    location._add_cluster(sub) #type: ignore
+        if not self.locations:
+            return
+        
+        with dot.subgraph(name=f'cluster_{self.name}_locations') as sub: #type: ignore
+            sub.attr(label='Child Locations')
+            sub.attr(style='rounded')
+            for location in self.locations:
+                location._add_cluster(sub) #type: ignore
                     
     
     def _add_component_cluster(self, dot: Digraph):
         with dot.subgraph(name=f'cluster_{self.name}_components') as sub: #type: ignore
-            sub.attr(style='dotted', label='Components')
-            for n, component in enumerate(self.components):
-                sub.node(component.name, shape='box')
+            sub.attr(style='dotted,rounded', label='Components', labeljust='l')
+            self._add_sensor_cluster(sub) #type: ignore
+
+    
+    def _add_sensor_cluster(self, dot: Digraph):
+        for component in self.components:
+            cls_label = component.name.replace(' ', "\\n")
+            if component.sensors:
+                cluster = f'cluster_{self.name}{component.name}Sensors'.replace(' ', '')
+                with dot.subgraph(name=cluster) as subsub: #type: ignore
+                    subsub.attr(label = cls_label, style='dashed,rounded')
+                    for sensor in component.sensors:
+                        sensor_name = f'sensor{self.name}{component.name}{sensor.name}'.replace(' ','')
+                        sensor_label = sensor.name.replace(' ', "\\n")
+                        subsub.node(sensor_name, label=sensor_label)
+                        sensor.node_name = sensor_name
+            else:
+                node_name = f'{self.name}{component.name}'
+                dot.node(node_name, label=cls_label, shape='box')
     
     def _add_cluster(self, dot: Digraph):
         if self.components or self.locations:
             with dot.subgraph(name=f'cluster_{self.name}') as sub: #type: ignore
-                sub.attr(label=self.name, shape=self._get_shape())
+                sub.attr(label=self.name, labeljust='l')
                 self._add_location_clusters(sub) #type: ignore
                 self._add_component_cluster(sub) #type: ignore
                 return
-        dot.node(self.name, shape='box')
+        dot.node(self.name.replace(' ', "\\n"), shape='box')
+
+
+    def _add_edges(self, dot: Digraph):
+        sensors = self.get_sensors()
+        for sensor, lag_sensor in zip(sensors, reversed(sensors)):
+            dot.edge(sensor.node_name, lag_sensor.node_name)
+            
+
 
     def to_graph(self):
-        dot = Digraph()
-        dot.engine = 'dot'
-        dot.attr('node', shape='box')
+        dot = Digraph(engine = 'dot')
+        dot.attr(style='rounded', K="2", start="1", overlap="scalexy")
+        dot.attr('node', shape='box', style='rounded')
+        dot.attr('edge', style='invis')
         self._add_cluster(dot)
+        self._add_edges(dot)
         return dot
 
 
