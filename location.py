@@ -49,18 +49,18 @@ class Location:
         return components
     
 
-    def get_sensors(self) -> list[Sensor]:
-        sensors: list[Sensor] = [sensor for component in self.components for sensor in component.sensors]
+    # def get_sensors(self) -> list[Sensor]:
+    #     sensors: list[Sensor] = [sensor for component in self.components for sensor in component.sensors]
 
-        for loc in self.locations:
-            sensors.extend(loc.get_sensors())
+    #     for loc in self.locations:
+    #         sensors.extend(loc.get_sensors())
 
-        return sensors
+    #     return sensors
 
 
     def evaluate_location_state(self) :
         all_components = self.get_components()
-        all_sensors = self.get_sensors()
+        # all_sensors = self.get_sensors()
 
         for component in all_components:
             pass
@@ -100,15 +100,15 @@ class Location:
     def _add_sensor_cluster(self, dot: Digraph):
         for component in self.components:
             cls_label = component.name.replace(' ', "\\n")
-            if component.sensors:
+            if component.components:
                 cluster = f'cluster_{self.name}{component.name}Sensors'.replace(' ', '')
                 with dot.subgraph(name=cluster) as subsub: #type: ignore
                     subsub.attr(label = cls_label, style='dashed,rounded')
-                    for sensor in component.sensors:
+                    for sensor in component.components:
                         sensor_name = f'sensor{self.name}{component.name}{sensor.name}'.replace(' ','')
                         sensor_label = sensor.name.replace(' ', "\\n")
                         subsub.node(sensor_name, label=sensor_label)
-                        sensor.node_name = sensor_name
+                        # sensor.node_name = sensor_name
             else:
                 node_name = f'{self.name}{component.name}'
                 dot.node(node_name, label=cls_label, shape='box')
@@ -124,9 +124,9 @@ class Location:
 
 
     def _add_edges(self, dot: Digraph):
-        sensors = self.get_sensors()
+        sensors = self.get_components()
         for sensor, lag_sensor in zip(sensors, reversed(sensors)):
-            dot.edge(sensor.node_name, lag_sensor.node_name)
+            dot.edge(sensor.name, lag_sensor.name)
             
 
 
@@ -138,6 +138,14 @@ class Location:
         self._add_cluster(dot)
         self._add_edges(dot)
         return dot
+    
+
+    def _add_location_nodes(self, dot: Digraph):
+        pass
+
+    def better_graph(self):
+        dot = Digraph(engine = 'dot')
+        
 
 
 class LocationState(Enum):

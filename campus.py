@@ -1,12 +1,18 @@
-from location import Location
+# from location import Location
+from component import Component
+from typing import Optional
+
 
 class Campus:
     def __init__(self) -> None:
-        self.locations: list[Location] = []
+        self.components: list[Component] = []
+        self.locations: list[str] = []
 
-    def add_location(self, location: Location) -> None:
-        if not isinstance(location, Location):
-            raise TypeError('Passed argument is not instance of Location')
-        self.locations.append(location)
 
-    
+    def add_component(self, component: Component, location_identifier: Optional[str]):
+        pass
+
+    def to_graph(self):
+        seen_locations: set = set(self.locations)
+        for component in self.components:
+            

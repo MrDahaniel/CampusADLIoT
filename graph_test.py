@@ -19,7 +19,7 @@ pm10: Sensor = Sensor('PM10 Sensor')
 pm25: Sensor = Sensor('PM2.5 Sensor')
 
 temp: Component = Component('Temperature Component')
-t_sens: Sensor = Sensor('Temperature Sensor')
+# t_sens: Sensor = Sensor('Temperature Sensor')
 
 noise: Component = Component('Noise Component')
 noise_sens: Sensor = Sensor('dB Sensor')
@@ -32,12 +32,12 @@ campus.add_location(camilo)
 lp.add_location(lp104)
 lp.add_location(oficina)
 
-pm.add_sensor(pm10)
-pm.add_sensor(pm25)
+# pm.add_sensor(pm10)
+# pm.add_sensor(pm25)
 
-temp.add_sensor(t_sens)
+# # temp.add_sensor(t_sens)
 
-noise.add_sensor(noise_sens)
+# noise.add_sensor(noise_sens)
 
 lp.add_component(pm, ComponentType.MANDATORY)
 
