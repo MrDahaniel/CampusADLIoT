@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional
+from typing import cast
 from sensor import Sensor
 from graphviz import Digraph
 from copy import copy
@@ -7,10 +7,10 @@ from copy import copy
 from enum import Enum
 
 class Component:
-    def __init__(self, name: str, location: Optional[str] = None) -> None:
+    def __init__(self, name: str) -> None:
         self.name: str = name
-        self.location: Optional[str] = location
         self.components: list[Component] = []
+        self.location_identifier: str | None = None
         self.type: ComponentType
         self.state: ComponentState = ComponentState.UNINITIALIZED
 
@@ -19,7 +19,6 @@ class Component:
             raise TypeError('Passed argument is not instance of Component')
 
         new_comp = copy(component)
-        new_comp.location = None
 
         self.components.append(new_comp)
 
@@ -33,10 +32,8 @@ class Component:
         
         return ComponentState.FAULT
 
-    def _add_component_nodes(self, dot: Digraph):
-        self.node_name = f'{self.location}_{self.name}'
-        dot.node(name=self.node_name, shape='box', label=self.name) # Self node
-        dot.edge(self.node_name)
+
+        
 
         
 

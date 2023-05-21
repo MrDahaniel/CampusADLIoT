@@ -2,48 +2,54 @@
 
 from location import Location
 from component import Component, ComponentType
-from sensor import Sensor
+from campus import Campus
 
-campus: Location = Location('Campus Central')
-lp: Location = Location('Laboratorios Pesados')
+aggr: Campus = Campus()
 
-lp104: Location = Location('Salón 104')
-oficina: Location = Location('Oficina')
-
-centic: Location = Location('CENTIC')
-camilo: Location = Location('Camilo Torres')
-mecanica: Location = Location('Mecanica')
-
-pm: Component = Component('Particle Component')
-pm10: Sensor = Sensor('PM10 Sensor')
-pm25: Sensor = Sensor('PM2.5 Sensor')
-
-temp: Component = Component('Temperature Component')
-# t_sens: Sensor = Sensor('Temperature Sensor')
-
-noise: Component = Component('Noise Component')
-noise_sens: Sensor = Sensor('dB Sensor')
+campus: Location = Location('Campus Central', 'CampusCentral')
+lp: Location = Location('Laboratorios Pesados', 'LabP')
+camilo: Location = Location('Camilo Torres', 'CamiloTorres')
+mecanica: Location = Location('Mecánica', 'Mecanica')
 
 campus.add_location(lp)
 campus.add_location(mecanica)
-campus.add_location(centic)
 campus.add_location(camilo)
 
-lp.add_location(lp104)
-lp.add_location(oficina)
+aggr.add_location(campus)
+aggr.add_location(lp)
+aggr.add_location(mecanica)
+aggr.add_location(camilo)
 
-# pm.add_sensor(pm10)
-# pm.add_sensor(pm25)
+pm: Component = Component('Particle Component')
+pm.add_component(Component('PM10'))
+pm.add_component(Component('PM2.5'))
 
-# # temp.add_sensor(t_sens)
+dol139: Component = Component('DOL139')
+dol139.add_component(Component('Temperature Sensor'))
+dol139.add_component(Component('CO2 Sensor'))
+dol139.add_component(Component('Humidity Sensor'))
 
-# noise.add_sensor(noise_sens)
+climate: Component = Component('Climate Component')
+climate.add_component(dol139)
+climate.add_component(Component('Ammonia Sensor'))
 
-lp.add_component(pm, ComponentType.MANDATORY)
+noise: Component = Component('Noise Sensor')
 
-campus.add_component(temp, ComponentType.MANDATORY)
-campus.add_component(noise, ComponentType.OPTIONAL)
+alarm: Component = Component('Alarma')
+alarm.add_component(Component('Sirena'))
+alarm.add_component(Component('Luces'))
 
-mecanica.add_component(temp, ComponentType.MANDATORY)
+aggr.add_component(climate, ComponentType.MANDATORY, campus)
 
-campus.export('ignore/diagram')
+aggr.add_component(pm, ComponentType.OPTIONAL, camilo)
+aggr.add_component(pm, ComponentType.OPTIONAL, mecanica)
+aggr.add_component(pm, ComponentType.OPTIONAL, lp)
+
+aggr.add_component(alarm, ComponentType.MANDATORY, camilo)
+aggr.add_component(alarm, ComponentType.MANDATORY, mecanica)
+aggr.add_component(alarm, ComponentType.MANDATORY, lp)
+
+aggr.add_component(noise, ComponentType.OPTIONAL, mecanica)
+
+
+aggr.to_graph().render('ignore/diagram', format='png')
